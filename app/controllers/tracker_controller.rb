@@ -40,7 +40,7 @@ class TrackerController < ApplicationController
   end
 
   def render_response(data, etag=nil, last_modified=Time.zone.now.httpdate)
-    #expires_in 1.year, :public => true
+    expires_in 5.minutes, :public => true
     if etag.present?
       headers['ETag'] = %Q|"#{etag}"|
     end
