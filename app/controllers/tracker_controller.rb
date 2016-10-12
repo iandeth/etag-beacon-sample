@@ -11,21 +11,20 @@ class TrackerController < ApplicationController
       data = 1
       etag = generate_etag()
       file = save_data(etag, data)
-      render_response(etag, data, file.mtime.httpdate)
-      logger.debug "write: #{data} : #{etag}"
+      render_response(data, etag, file.mtime.httpdate)
+      logger.info "write: #{data} : #{etag}"
     else
       # 読み込み側ページからのリクエストの場合は stored data を読み取って返す
       etag = retrieve_etag_from_header()
-      logger.debug "retrieved etag: #{etag}"
+      logger.info "retrieved etag: #{etag}"
       ret = load_data(etag)
       if ret.present?
-        render_response(etag, ret[:data], ret[:last_modified])
-        logger.debug "read data: #{data} : #{etag}"
+        render_response(ret[:data], etag, ret[:last_modified])
+        logger.info "read data: #{ret[:data]} : #{etag}"
       else
         data = 0
-        etag = generate_etag()
-        render_response(etag, data)
-        logger.debug "read thru: #{data} : #{etag}"
+        render_response(data)
+        logger.info "read thru: #{data} : #{etag}"
       end
     end
   end
@@ -40,9 +39,11 @@ class TrackerController < ApplicationController
     (request.headers["HTTP_IF_NONE_MATCH"] || "").gsub(/"/, '')
   end
 
-  def render_response(etag, data, last_modified=Time.zone.now.httpdate)
-    expires_in 1.year, :public => true
-    headers['ETag'] = %Q|"#{etag}"|
+  def render_response(data, etag=nil, last_modified=Time.zone.now.httpdate)
+    #expires_in 1.year, :public => true
+    if etag.present?
+      headers['ETag'] = %Q|"#{etag}"|
+    end
     headers['Last-Modified'] = last_modified
     render :js => %Q|var kz = { is_login_user: #{data} };|
   end
