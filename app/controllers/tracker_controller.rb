@@ -2,25 +2,30 @@ class TrackerController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   def index
-    writer_page = "//client-test.s3.amazonaws.com/iandeth/20161012-etag/"
+    writer_page = "//client-test.s3.amazonaws.com/iandeth/20161012-etag/writer.html"
     ref = (request.headers['HTTP_REFERER'] || "")
 
+    #byebug
     if ref.match(%r|^https?:#{writer_page}|)
       # 書き込み側からのリクエストだった場合は etag 発行 + stored data 作成
       data = 1
       etag = generate_etag()
       file = save_data(etag, data)
       render_response(etag, data, file.mtime.httpdate)
+      logger.debug "write: #{data} : #{etag}"
     else
       # 読み込み側ページからのリクエストの場合は stored data を読み取って返す
       etag = retrieve_etag_from_header()
+      logger.debug "retrieved etag: #{etag}"
       ret = load_data(etag)
       if ret.present?
         render_response(etag, ret[:data], ret[:last_modified])
+        logger.debug "read data: #{data} : #{etag}"
       else
         data = 0
         etag = generate_etag()
         render_response(etag, data)
+        logger.debug "read thru: #{data} : #{etag}"
       end
     end
   end
@@ -36,7 +41,7 @@ class TrackerController < ApplicationController
   end
 
   def render_response(etag, data, last_modified=Time.zone.now.httpdate)
-    expires_in 20.seconds, :public => true
+    expires_in 1.year, :public => true
     headers['ETag'] = %Q|"#{etag}"|
     headers['Last-Modified'] = last_modified
     render :js => %Q|var kz = { is_login_user: #{data} };|

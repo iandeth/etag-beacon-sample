@@ -29,5 +29,7 @@ module StaffserviceEtag
     # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}').to_s]
     # config.i18n.default_locale = :de
     config.storage = { root_dir: Rails.root + "db/etags" }
+
+    config.action_dispatch.default_headers.clear
   end
 end
