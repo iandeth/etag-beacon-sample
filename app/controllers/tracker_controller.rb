@@ -2,7 +2,7 @@ class TrackerController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   def index
-    writer_page = "//client-test.s3.amazonaws.com/iandeth/20161012-etag/writer.html"
+    writer_page = "//client-test.s3.amazonaws.com/iandeth/20161012-etag/writer"
     ref = (request.headers['HTTP_REFERER'] || "")
 
     #byebug
